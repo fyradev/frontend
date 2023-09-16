@@ -3,6 +3,7 @@ import './index.css';
 import App from './App';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
+import './index'
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
