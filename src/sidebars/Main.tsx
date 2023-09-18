@@ -1,6 +1,13 @@
 import { Box } from "@mui/material";
 import SidebarItem from "../components/SidebarItem";
-import { Code, HomeOutlined } from "@mui/icons-material";
+import {
+  AppsOutlined,
+  HomeOutlined,
+  SettingsOutlined,
+} from "@mui/icons-material";
+
+// Icons
+import DockerIcon from "../icons/Docker";
 
 function MainSideBar() {
   return (
@@ -8,34 +15,32 @@ function MainSideBar() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: "0px",
         height: "100%",
       }}
     >
       <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
+      <SidebarItem Icon={AppsOutlined} text="Apps" to="/apps" />
       <SidebarItem
-        Icon={Code}
-        text="Test"
+        Icon={DockerIcon as any}
+        text="Docker"
         collapsible={true}
         children={[
-          { title: "Test 1", to: "/test1" },
-          { title: "Test 2", to: "/test2" },
+          { title: "Containers", to: "/docker/containers" },
+          { title: "Images", to: "/docker/images" },
+          { title: "Volumes", to: "/docker/volumes" },
+          { title: "Networks", to: "/docker/networks" },
         ]}
       />
-      <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
       <SidebarItem
-        Icon={Code}
-        text="Test"
+        Icon={SettingsOutlined}
+        text="Settings"
         collapsible={true}
         children={[
-          { title: "Test 1", to: "/test1" },
-          { title: "Test 2", to: "/test2" },
+          { title: "General", to: "/settings/general" },
+          { title: "Users", to: "/settings/users" },
         ]}
       />
-      <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
-      <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
-      <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
-      <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
     </Box>
   );
 }

@@ -9,6 +9,7 @@ import LoginPage from "./pages/Login";
 // Sidebars
 import MainSideBar from "./sidebars/Main";
 import { ExitToApp, Terminal } from "@mui/icons-material";
+import Shell from "./pages/Shell";
 
 function App() {
   const navigate = useNavigate();
@@ -115,32 +116,34 @@ function App() {
           left: "0",
           bottom: "0",
           width: "225px",
+          height: "100%", 
           overflowY: "auto",
           overflowX: "hidden",
 
-          paddingTop: "60px",
+          paddingTop: "50px",
           borderRight: "2px solid rgba(255, 255, 255, 0.12)",
         }}
       >
         <Routes>
           <Route path="/" element={<MainSideBar />} />
+          <Route path="/apps" element={<MainSideBar />} />  
+          <Route path="*" element={<MainSideBar />} />
         </Routes>
       </Box>
       <Box
         className="App"
         sx={{
-          marginLeft: `${document.getElementById("Sidebar")?.clientWidth}px`,
+          marginLeft: `225px`,
           marginTop: "50px",
           height: "100%",
-          width: `calc(100% - ${
-            document.getElementById("Sidebar")?.clientWidth
-          }px)`,
+          width: `calc(100% - 225px)`,
           px: "10px",
         }}
       >
         <Routes>
           <Route path="/" element={<h1>Test</h1>} />
           <Route path="/about" element={<h1>Test2</h1>} />
+          <Route path="/shell" element={<Shell />} />
         </Routes>
       </Box>
     </>

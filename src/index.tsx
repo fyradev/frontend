@@ -1,36 +1,35 @@
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
-import { BrowserRouter } from 'react-router-dom';
-import './index'
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
+import { BrowserRouter } from "react-router-dom";
+import "./index";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
-
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
     primary: {
-      main: '#4A00E0',
+      main: "#093f9b",
     },
     secondary: {
-      main: '#093f9b',
+      main: "#4A00E0",
     },
     background: {
-      default: '#101010',
-      paper: '#101010',
+      default: "#101010",
+      paper: "#101010",
     },
     text: {
-      primary: '#fff',
-      secondary: '#fff',
+      primary: "#fff",
+      secondary: "#fff",
     },
     action: {
-      active: '#fff',
+      active: "#fff",
     },
-  }
+  },
 });
 
 root.render(
