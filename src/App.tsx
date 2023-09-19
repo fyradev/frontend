@@ -29,7 +29,7 @@ function App() {
           }
         )
         .then((res) => {
-          navigate("/");
+          if(location.pathname === "/login") navigate("/");
         })
         .catch((err) => {
           console.log(err);

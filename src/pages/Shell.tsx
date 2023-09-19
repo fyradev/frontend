@@ -30,52 +30,58 @@ function Shell() {
 
       /**
        * This is a postion tracker for the input
-       * The input is an array of strings which each string is a line
-       * The line variable is the current line
-       * The pos variable is the current position in the line
+       * first index being the line
        */
-      let input: string[] = [];
-      let line = 0;
+      let input: number[] = [];
       let pos = 0;
 
       xterm.onData((e) => {
         if (!allowInput) return;
         console.log(e);
-        let content = e.split("");
+        console.log(`Pos: ${pos}`)
+
+        let content: number[] = [];
+        // convert the string to an array of numbers but remember that the invisible characters are multiple characters long
+        // split using a regex that matches the invisible characters
+
+        var utf8 = unescape(encodeURIComponent(e));
+
+        console.log(`UTF8: ${utf8}`);
+
+        for (var i = 0; i < utf8.length; i++) {
+            content.push(utf8.charCodeAt(i));
+        }
+
         for (let e of content) {
-            console.log(e);
+          console.log(e);
           switch (e) {
-            case "\r":
-              console.log("NEW LINE");
-              xterm.writeln("");
-
-              line++;
-              pos = 0;
-
+            // \r
+            case 13:
+              console.log("RETURN");
               break;
-            case "\u0003":
+            // \n
+            case 10:
+              console.log("NEW LINE");
+              break;
+            case 3:
               input = [];
-              line = 0;
               pos = 0;
               xterm.write("\n");
               xterm.write("root@fyra:~$ ");
               break;
-            case "\u001b[A":
+            case 27:
               console.log("UP");
               break;
-            case "\u001b[B":
+            case 28:
               console.log("DOWN");
               break;
-            case "\u007F":
-              if (pos === 0) break;
-              input[line] = input[line].slice(0, -1);
-              pos--;
-              xterm.write("\b \b");
+            case 127:
               break;
             default:
-              input[line] = input[line] ? input[line] + e : e;
+              // insert the character into the input array at the pos
+              input.splice(pos, 0, e);
               pos++;
-              xterm.write(e);
+              xterm.write(String.fromCharCode(e));
               break;
           }
         }
@@ -85,20 +91,23 @@ function Shell() {
       xterm.onKey((e) => {
         switch (e.domEvent.key) {
           case "Enter":
-            console.log("NEW LINE");
+            console.log("Enter");
             xterm.writeln("");
-            xterm.write(input.join("\n"));
+            xterm.writeln(input.join("\r"));
 
-            console.log(input.join("\\"));
-            console.log(input.join("\\") === "clear\\");
-            if (input.join("\\") === "clear\\") {
+            console.log(input);
+            
+            //convert the input to a string
+            let command = "";
+            for (let item of input) command += String.fromCharCode(item);
+
+            if (command === "clear") {
               setTimeout(() => {
                 xterm.clear();
               }, 50);
             }
 
             input = [];
-            line = 0;
             pos = 0;
 
             setTimeout(() => {
@@ -110,6 +119,12 @@ function Shell() {
             break;
           case "ArrowDown":
             console.log("DOWN");
+            break;
+          case "Backspace":
+            if (pos === 0) break;
+            input = input.slice(0, pos - 1).concat(input.slice(pos));
+            pos--;
+            xterm.write("\b \b");
             break;
         }
       });
