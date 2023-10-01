@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import getBaseUrl from "../common/getBaseUrl";
 
 function Login() {
   const navigate = useNavigate();
@@ -24,21 +25,15 @@ function Login() {
 
   const valid = username && password;
 
-
   useEffect(() => {
     if (localStorage.getItem("token")) {
       setLoading(true);
       axios
-        .get(
-          process.env.NODE_ENV === "production"
-            ? ""
-            : "http://localhost" + "/api/auth/verify",
-          {
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token"),
-            },
-          }
-        )
+        .get(getBaseUrl() + "/api/auth/verify", {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
         .then((res) => {
           navigate("/");
         })
@@ -47,6 +42,7 @@ function Login() {
           console.log(err);
         });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -169,15 +165,10 @@ function Login() {
               setError("");
               const pwHash = sha256(password).toString();
               axios
-                .post(
-                  process.env.NODE_ENV === "production"
-                    ? ""
-                    : "http://localhost" + "/api/auth/login",
-                  {
-                    username: username,
-                    password: pwHash,
-                  }
-                )
+                .post(`${getBaseUrl()}/api/auth/login`, {
+                  username: username,
+                  password: pwHash,
+                })
                 .then((res) => {
                   localStorage.setItem("token", res.data.token);
                   navigate("/");
@@ -189,9 +180,16 @@ function Login() {
                 });
             }}
           >
-            {loading ? <CircularProgress sx={{
-              color: "#fff"
-            }} size={32} /> : "Login"}
+            {loading ? (
+              <CircularProgress
+                sx={{
+                  color: "#fff",
+                }}
+                size={32}
+              />
+            ) : (
+              "Login"
+            )}
           </Button>
         </Box>
       </Box>

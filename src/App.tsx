@@ -2,14 +2,17 @@ import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AppBar, Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { useEffect } from "react";
 import axios from "axios";
+import { ExitToApp, Terminal } from "@mui/icons-material";
 
 // pages
 import LoginPage from "./pages/Login";
+import AppsListPage from "./pages/AppsList";
+import Shell from "./pages/Shell";
+import AppsWizard from "./pages/AppsWizard";
+import AppsEnvs from "./pages/AppsEnvs";
 
 // Sidebars
 import MainSideBar from "./sidebars/Main";
-import { ExitToApp, Terminal } from "@mui/icons-material";
-import Shell from "./pages/Shell";
 
 function App() {
   const navigate = useNavigate();
@@ -142,6 +145,9 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<h1>Test</h1>} />
+          <Route path="/apps" element={<AppsListPage />} />
+          <Route path="/apps/envs" element={<AppsEnvs />} />
+          <Route path="/apps/wizard/:env" element={<AppsWizard />} />
           <Route path="/about" element={<h1>Test2</h1>} />
           <Route path="/shell" element={<Shell />} />
         </Routes>

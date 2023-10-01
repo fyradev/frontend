@@ -2,6 +2,8 @@ import { Box } from "@mui/material";
 import SidebarItem from "../components/SidebarItem";
 import {
   AppsOutlined,
+  ComputerOutlined,
+  FolderOpenOutlined,
   HomeOutlined,
   SettingsOutlined,
 } from "@mui/icons-material";
@@ -20,7 +22,16 @@ function MainSideBar() {
       }}
     >
       <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
-      <SidebarItem Icon={AppsOutlined} text="Apps" to="/apps" />
+      <SidebarItem Icon={FolderOpenOutlined} text="Files" to="/files" />
+      <SidebarItem 
+        Icon={AppsOutlined}
+        text="Apps"
+        collapsible={true}
+        children={[
+          { title: "Apps", to: "/apps" },
+          { title: "Environments", to: "/apps/envs" },
+        ]}
+      />
       <SidebarItem
         Icon={DockerIcon as any}
         text="Docker"
@@ -30,6 +41,16 @@ function MainSideBar() {
           { title: "Images", to: "/docker/images" },
           { title: "Volumes", to: "/docker/volumes" },
           { title: "Networks", to: "/docker/networks" },
+        ]}
+      />
+      <SidebarItem
+        Icon={ComputerOutlined}
+        text="VMs"
+        collapsible={true}
+        children={[
+          { title: "VMs", to: "/vms/list" },
+          { title: "Images", to: "/vms/isos" },
+          { title: "Templates", to: "/vms/templates" },
         ]}
       />
       <SidebarItem

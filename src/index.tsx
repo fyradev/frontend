@@ -5,6 +5,9 @@ import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { BrowserRouter } from "react-router-dom";
 import "./index";
 
+// fonts
+import '@fontsource/prompt';
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
@@ -29,7 +32,21 @@ const theme = createTheme({
     action: {
       active: "#fff",
     },
+    success: {
+      main: "#388e3c",
+      contrastText: "#fff",
+    },
   },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "0",
+          textTransform: "none",
+        },
+      },
+    },
+  }
 });
 
 root.render(
