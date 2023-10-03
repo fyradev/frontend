@@ -5,6 +5,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Divider,
   Grid,
   IconButton,
   ListItemIcon,
@@ -14,12 +15,20 @@ import {
   Typography,
 } from "@mui/material";
 import getBaseUrl from "../common/getBaseUrl";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Delete, Edit, MoreHoriz, MoreVert } from "@mui/icons-material";
+import {
+  DeleteSweep,
+  Edit,
+  ImportExport,
+  InstallDesktop,
+  MoreVert,
+} from "@mui/icons-material";
 
 function AppsEnvs() {
+  const navigate = useNavigate();
+
   const [envs, setEnvs] = useState<Types.AppEnv[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
 
@@ -39,8 +48,12 @@ function AppsEnvs() {
       });
   }, []);
 
-
-  if(!loaded) return <Backdrop open={true}><CircularProgress size='3rem' /></Backdrop>
+  if (!loaded)
+    return (
+      <Backdrop open={true}>
+        <CircularProgress size="3rem" />
+      </Backdrop>
+    );
 
   return (
     <>
@@ -61,15 +74,28 @@ function AppsEnvs() {
       >
         <MenuItem>
           <ListItemIcon>
+            <ImportExport fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Export</ListItemText>
+        </MenuItem>
+        <MenuItem>
+          <ListItemIcon>
+            <InstallDesktop fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Re-Install</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem>
+          <ListItemIcon>
             <Edit fontSize="small" />
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
         <MenuItem>
           <ListItemIcon>
-            <Delete fontSize="small" />
+            <DeleteSweep fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
+          <ListItemText>Uninstall</ListItemText>
         </MenuItem>
       </Menu>
       <Box
@@ -112,101 +138,99 @@ function AppsEnvs() {
           }}
         >
           {envs.map((env, index) => (
-            <Link to={`/apps/wizard/${env.id}`}>
-              <Grid
-                item
-                key={index}
+            <Grid
+              item
+              key={index}
+              sx={{
+                width: "500px",
+                height: "225px",
+                background: "#ffffff11",
+                borderRadius: "10px",
+                padding: "10px",
+
+                display: "flex",
+                flexDirection: "row",
+
+                transition: "all 0.2s ease-in-out",
+                cursor: "pointer",
+
+                "&:hover": {
+                  background: "#ffffff22",
+                  transform: "scale(1.01)",
+                },
+              }}
+              onClick={() => {
+                navigate(`/apps/wizard/${env.id}`);
+              }}
+            >
+              <Avatar
+                src={`${getBaseUrl()}/api/apps/envs/icon/${env.id}`}
+                sx={{ width: "100px", height: "100px" }}
+              />
+              <Box
                 sx={{
-                  width: "500px",
-                  height: "225px",
-                  background: "#ffffff11",
-                  borderRadius: "10px",
-                  padding: "10px",
-
                   display: "flex",
-                  flexDirection: "row",
-
-                  transition: "all 0.2s ease-in-out",
-                  cursor: "pointer",
-
-                  "&:hover": {
-                    background: "#ffffff22",
-                    transform: "scale(1.01)",
-                  },
-                }}
-                onClick={() => {
-                  console.log("Selected");
+                  flexDirection: "column",
+                  marginLeft: "10px",
+                  padding: "10px",
+                  height: "auto",
+                  width: "100%",
+                  flexGrow: 0,
                 }}
               >
-                <Avatar
-                  src={`${getBaseUrl()}/api/apps/envs/icon/${env.id}`}
-                  sx={{ width: "100px", height: "100px" }}
-                />
                 <Box
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    marginLeft: "10px",
-                    padding: "10px",
-                    height: "auto",
                     width: "100%",
-                    flexGrow: 0,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: "1.5rem",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {env.name}
-                    </Typography>
-                    <IconButton
-                      sx={{
-                        marginLeft: "10px",
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("clicked");
-                        setAnchorEl(e.currentTarget);
-                      }}
-                      className="moreButton"
-                    >
-                      <MoreVert fontSize="small" />
-                    </IconButton>
-                  </Box>
-                  <Box>
-                    {env.tags.slice(0, 4).map((tag, index) => (
-                      <Chip
-                        size="small"
-                        key={index}
-                        label={tag}
-                        sx={{
-                          marginRight: "5px",
-                          marginTop: "0px",
-                        }}
-                      />
-                    ))}
-                  </Box>
                   <Typography
                     sx={{
-                      fontSize: "0.75rem",
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
                     }}
                   >
-                    {env.description}
+                    {env.name}
                   </Typography>
+                  <IconButton
+                    sx={{
+                      marginLeft: "10px",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log("clicked");
+                      setAnchorEl(e.currentTarget);
+                    }}
+                    className="moreButton"
+                  >
+                    <MoreVert fontSize="small" />
+                  </IconButton>
                 </Box>
-              </Grid>
-            </Link>
+                <Box>
+                  {env.tags.slice(0, 4).map((tag, index) => (
+                    <Chip
+                      size="small"
+                      key={index}
+                      label={tag}
+                      sx={{
+                        marginRight: "5px",
+                        marginTop: "0px",
+                      }}
+                    />
+                  ))}
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {env.description}
+                </Typography>
+              </Box>
+            </Grid>
           ))}
         </Grid>
       </Box>

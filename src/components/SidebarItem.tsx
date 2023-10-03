@@ -47,15 +47,20 @@ function SidebarItem({
 
             borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
 
-            transition: "border 0.1s ease-in-out",
+            transition: "all 0.1s ease-in-out",
 
             "&:hover": {
               backgroundColor: "#555",
+              gap: "25px",
             },
 
             ...(children?.find((v) => v.to === location.pathname) && {
               borderLeft: `3px solid ${theme.palette.primary.main}`,
               paddingLeft: "7px",
+              "&:hover": {
+                backgroundColor: "#555",
+                gap: "20px",
+              },
             }),
           }}
           onClick={() => {
@@ -181,15 +186,21 @@ function SidebarItem({
           userSelect: "none",
           borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
 
-          transition: "border 0.1s ease-in-out",
+          transition: "all 0.1s ease-in-out",
 
           "&:hover": {
             backgroundColor: "#555",
+            gap: "25px",
           },
 
           ...(location.pathname === to && {
             borderLeft: `3px solid ${theme.palette.primary.main}`,
             paddingLeft: "7px",
+            "&:hover": {
+              backgroundColor: "#555",
+              gap: "20px",
+            },
+  
           }),
         }}
         onClick={() => {

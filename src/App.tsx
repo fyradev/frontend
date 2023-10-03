@@ -2,7 +2,7 @@ import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AppBar, Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { useEffect } from "react";
 import axios from "axios";
-import { ExitToApp, Terminal } from "@mui/icons-material";
+import { AssignmentOutlined, ExitToApp } from "@mui/icons-material";
 
 // pages
 import LoginPage from "./pages/Login";
@@ -13,6 +13,7 @@ import AppsEnvs from "./pages/AppsEnvs";
 
 // Sidebars
 import MainSideBar from "./sidebars/Main";
+import ShellIcon from "./icons/Shell";
 
 function App() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ function App() {
           }
         )
         .then((res) => {
-          if(location.pathname === "/login") navigate("/");
+          if (location.pathname === "/login") navigate("/");
         })
         .catch((err) => {
           console.log(err);
@@ -86,16 +87,28 @@ function App() {
             height: "100%",
             px: "10px",
             marginLeft: "auto",
+            gap: "5px",
+            fontSize: "1.2rem",
           }}
         >
           <Tooltip title="Shell">
+            <IconButton
+              sx={{ ml: "auto", fontSize: "16px", color: "#fff" }}
+              onClick={() => {
+                alert("TODO");
+              }}
+            >
+              <ShellIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Jobs">
             <IconButton
               sx={{ ml: "auto" }}
               onClick={() => {
                 alert("TODO");
               }}
             >
-              <Terminal fontSize="small" />
+              <AssignmentOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Logout">
@@ -119,7 +132,7 @@ function App() {
           left: "0",
           bottom: "0",
           width: "225px",
-          height: "100%", 
+          height: "100%",
           overflowY: "auto",
           overflowX: "hidden",
 
@@ -129,7 +142,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<MainSideBar />} />
-          <Route path="/apps" element={<MainSideBar />} />  
+          <Route path="/apps" element={<MainSideBar />} />
           <Route path="*" element={<MainSideBar />} />
         </Routes>
       </Box>

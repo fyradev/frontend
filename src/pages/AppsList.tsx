@@ -1,5 +1,6 @@
 import { MoreVert } from "@mui/icons-material";
 import {
+  Avatar,
   Backdrop,
   Box,
   Button,
@@ -20,18 +21,30 @@ import { useEffect, useState } from "react";
 import { useAppList } from "../states/AppList";
 import StatusBadge from "../components/StatusBadge";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import getBaseUrl from "../common/getBaseUrl";
 
 function AppsList(): JSX.Element {
   const [appsChecked, setAppsChecked] = useState<boolean[]>([]);
 
   const { apps, requestApps } = useAppList();
+  const [envs, setEnvs] = useState<Types.AppEnv[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     requestApps().then(() => {
-      setLoaded(true);
+      axios
+        .get(`${getBaseUrl()}/api/apps/envs/get`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        .then((res) => {
+          setEnvs(res.data.envs);
+          setLoaded(true);
+        });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -50,10 +63,8 @@ function AppsList(): JSX.Element {
         justifyContent: "flex-start",
       }}
     >
-      <Backdrop 
-        open={!loaded}
-      >
-        <CircularProgress size='3rem' />
+      <Backdrop open={!loaded}>
+        <CircularProgress size="3rem" />
       </Backdrop>
       <Box
         sx={{
@@ -77,7 +88,9 @@ function AppsList(): JSX.Element {
           Apps List
         </Typography>
 
-        <Link to="/apps/envs"><Button variant="contained">Create</Button></Link>
+        <Link to="/apps/envs">
+          <Button variant="contained">Create</Button>
+        </Link>
       </Box>
       <Divider sx={{ width: "100%" }} />
 
@@ -87,7 +100,10 @@ function AppsList(): JSX.Element {
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={appsChecked.length > 0 && appsChecked.every((e) => e === true)}
+                  checked={
+                    appsChecked.length > 0 &&
+                    appsChecked.every((e) => e === true)
+                  }
                   indeterminate={
                     appsChecked.some((e) => e === true) &&
                     appsChecked.some((e) => e === false)
@@ -116,11 +132,49 @@ function AppsList(): JSX.Element {
                     }}
                   />
                 </TableCell>
-                <TableCell><Link to={`/apps/${apps[index].id}`}>{apps[index].name}</Link></TableCell>
+                <TableCell>
+                  <Link to={`/apps/${apps[index].id}`}>{apps[index].name}</Link>
+                </TableCell>
                 <TableCell align="right">
                   <StatusBadge status={apps[index].status} />
                 </TableCell>
-                <TableCell align="right">{apps[index].environment}</TableCell>
+                <TableCell align="right" sx={{
+                  py: "0px",
+                }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+
+                      userSelect: "none",
+
+                      backgroundColor: "#ffffff11",
+                      padding: "5px",
+                      width: "fit-content",
+                      ml: "auto",
+                    }}
+                  >
+                    <Avatar
+                      sx={{ width: "1.5rem", height: "1.5rem", mr: "10px" }}
+                      src={`${getBaseUrl()}/api/apps/envs/icon/${
+                        apps[index].environment
+                      }`}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {
+                        envs.find((env) => env.id === apps[index].environment)
+                          ?.name
+                      }
+                    </Typography>
+                  </Box>
+                </TableCell>
                 <TableCell align="right" padding="checkbox">
                   <IconButton>
                     <MoreVert />

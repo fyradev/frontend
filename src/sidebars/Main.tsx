@@ -23,15 +23,7 @@ function MainSideBar() {
     >
       <SidebarItem Icon={HomeOutlined} text="Dashboard" to="/" />
       <SidebarItem Icon={FolderOpenOutlined} text="Files" to="/files" />
-      <SidebarItem 
-        Icon={AppsOutlined}
-        text="Apps"
-        collapsible={true}
-        children={[
-          { title: "Apps", to: "/apps" },
-          { title: "Environments", to: "/apps/envs" },
-        ]}
-      />
+      <SidebarItem Icon={AppsOutlined} text="Apps" to="/apps" />
       <SidebarItem
         Icon={DockerIcon as any}
         text="Docker"

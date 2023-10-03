@@ -4,10 +4,29 @@ declare namespace Types {
         to: string;
     }
 
+    interface User {
+        id: string;
+        username: string;
+    }
+
+    type AppPermissions = "admin" | "edit" | "view" | "delete" | "deploy" | "files" | "console"
+
+    interface UserWithPermissions {
+        id: string;
+        username: string;
+        permissions: AppPermissions[];
+    }
+
+    type WizardFieldTypes = "string" | "number" | "slider" | "switch" | "select";
+    type WizardFieldTypesDataTypes = "percentage" | "bytes";
+    type WizardInternalAvailSteps = "internal_template" | "internal_perms" | "internal_summary";
+
     interface WizardStep {
         title: string;
         error?: string;
         complete: boolean;
+        internalID?: WizardInternalAvailSteps;
+        internalValue?: any;
         categories: WizardCategory[];
     }
 
@@ -21,17 +40,18 @@ declare namespace Types {
         id: string;
         label: string;
         description?: string;
-        type: 'string' | 'number' | 'slider' | 'switch';
-        dataType?: 'percentage' | 'bytes';
+        type: WizardFieldTypes;
+        dataType?: WizardFieldTypesDataTypes;
         required: boolean;
+        dependsOn?: string;
+        dependsOnValues?: any[];
         value: any;
         max?: number;
         min?: number;
-        restriction?: 'AlphaNummeric' | 'Nummeric' | 'Text';
         error?: string;
         options?: {
             id: string;
-            name: string;
+            label: string;
             description?: string;
         }[];
     }
@@ -55,17 +75,20 @@ declare namespace Types {
         maintainer: string;
         arguments?: {
           id: string;
-          category?: string;
-          name: string;
+          label: string;
           description: string;
+          type: 'string' | 'number' | 'slider' | 'switch' | 'select';
+          dataType?: 'percentage' | 'bytes';
           required: boolean;
-          default?: string;
-          type: string;
-          expandable: boolean;
+          dependsOn?: string;
+          dependsOnValues?: any[];
+          value?: any;
+          max?: number;
+          min?: number;
           options?: {
             id: string;
-            name: string;
-            description: string;
+            label: string;
+            description?: string;
           }[];
         }[];
     }

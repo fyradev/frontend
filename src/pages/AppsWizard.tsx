@@ -3,31 +3,26 @@ import {
   Backdrop,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Divider,
-  Slider,
-  Step,
-  StepButton,
-  StepLabel,
-  Stepper,
-  Switch,
-  TextField,
   Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import getBaseUrl from "../common/getBaseUrl";
-import convertBytes from "../common/convertBytes";
-import TooltipQuestion from "../components/TooltipQuestion";
+import WizardField from "../components/WizardField";
+import WizardInternalStep from "../components/WizardInternalStep";
+import { Warning } from "@mui/icons-material";
 
 function AppsWizard() {
   const params = useParams<{ env: string }>();
+
+  const [followViewport, setFollowViewport] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [env, setEnv] = useState<Types.AppEnv>();
 
-  const [step, setStep] = useState<number>(0);
+  const [completed, setCompleted] = useState<boolean>(false);
   const [steps, setSteps] = useState<Types.WizardStep[]>([
     {
       title: "General",
@@ -68,7 +63,7 @@ function AppsWizard() {
       categories: [
         {
           title: "CPU",
-          seperate: true,
+          seperate: false,
           fields: [
             {
               id: "cpu",
@@ -95,7 +90,7 @@ function AppsWizard() {
         },
         {
           title: "Memory",
-          seperate: true,
+          seperate: false,
           fields: [
             {
               id: "memory",
@@ -122,11 +117,40 @@ function AppsWizard() {
         },
       ],
     },
-    { title: "Summary", error: undefined, complete: false, categories: [] },
+    {
+      title: "Access",
+      error: undefined,
+      complete: false,
+      internalID: "internal_perms",
+      categories: [],
+    },
+    {
+      title: "Template",
+      error: undefined,
+      complete: false,
+      internalID: "internal_template",
+      categories: [],
+    },
+    // {
+    //   title: "Summary",
+    //   error: undefined,
+    //   complete: false,
+    //   internalID: "internal_summary",
+    //   categories: [],
+    // },
   ]);
 
   useEffect(() => {
-    setStep(0);
+    let listener = () => {
+      if (window.scrollY > 100) setFollowViewport(true);
+      else setFollowViewport(false);
+    };
+
+    document.addEventListener("scroll", listener);
+    return () => document.removeEventListener("scroll", listener);
+  }, []);
+
+  useEffect(() => {
     setLoaded(false);
 
     axios
@@ -137,28 +161,78 @@ function AppsWizard() {
       })
       .then((res) => {
         setEnv(res.data.data);
+
+        const data = res.data.data as Types.AppEnv;
+        if (!data.arguments || data.arguments.length === 0)
+          return setLoaded(true);
+
+        const customStep: Types.WizardStep = {
+          title: "Custom",
+          error: undefined,
+          complete: false,
+          categories: [
+            {
+              title: "Arguments",
+              fields: [],
+            },
+          ],
+        };
+        for (const arg of data.arguments) {
+          customStep.categories[0].fields.push({
+            id: arg.id,
+            label: arg.label,
+            description: arg.description,
+            type: arg.type as Types.WizardFieldTypes,
+            dataType: arg.dataType as Types.WizardFieldTypesDataTypes,
+            required: arg.required,
+            dependsOn: arg.dependsOn,
+            dependsOnValues: arg.dependsOnValues,
+            value: arg.value,
+            min: arg.min,
+            max: arg.max,
+            error: arg.required && !arg.value ? "Required" : undefined,
+            options: arg.options,
+          });
+        }
+        steps.push(customStep);
+
+        setSteps([...steps]);
         setLoaded(true);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.env]);
 
-  const checkStep = (step: number) => {
-    if (!env) return;
+  useEffect(() => {
+    let complete = true;
+    for (const step of steps) {
+      if (step.internalID) continue;
+      if (!complete) break;
 
-    const activeStep = steps[step];
-    activeStep.complete = activeStep.categories.every((category) => {
-      return category.fields.every((field) => {
-        if (field.required && (field.value === "" || !field.value))
-          return false;
-        if (field.error) return false;
-        return true;
-      });
-    });
+      for (const category of step.categories) {
+        if (!complete) break;
+        for (const field of category.fields) {
+          if (field.dependsOn) {
 
-    if (activeStep.complete) activeStep.error = undefined;
+            let dep: Types.WizardField | undefined;
 
-    steps[step] = activeStep;
-    setSteps([...steps]);
-  }
+            for (const s of steps) {
+              if(dep) break;
+              for (const c of s.categories) {
+                if(dep) break;
+                const f = c.fields.find((f) => f.id === field.dependsOn);
+                if (f) dep = f;
+              }
+            }
+            if (!dep) continue;
+            if (field.dependsOnValues && !field.dependsOnValues.includes(dep.value)) continue;
+          }
+          if (field.error) complete = false;
+        }
+      }
+    }
+
+    setCompleted(complete);
+  }, [steps]);
 
   if (!loaded)
     return (
@@ -180,6 +254,7 @@ function AppsWizard() {
       <Box
         sx={{
           width: "100%",
+
           marginBottom: "30px",
           display: "flex",
           flexDirection: "row",
@@ -213,307 +288,160 @@ function AppsWizard() {
         </Typography>
       </Box>
 
-      {/* ---------------------------------------------------------------- */}
-
       <Box
         sx={{
           width: "100%",
-          height: "100%",
-          marginBottom: "30px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "flex-start",
-          gap: "15px",
+          height: "auto",
 
-          padding: "10px",
-          px: "20px",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+
+          gap: "20px",
         }}
       >
-        <Stepper
-          activeStep={step}
-          nonLinear
+        {/* ---------------------------------------------------------------- */}
+        <Box
           sx={{
-            width: "100%",
-            px: "30px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "100px",
+            width: `calc(100% - 450px)`,
+            pb: "500px",
           }}
         >
           {steps.map((step, index) => {
-            const labelProps: {
-              optional?: React.ReactNode;
-              error?: boolean;
-            } = {};
-            if (step.error) {
-              labelProps.optional = (
-                <Typography variant="caption" color="error">
-                  {step.error}
-                </Typography>
-              );
-              labelProps.error = true;
-            }
-            if (
-              step.categories.some((category) =>
-                category.fields.some((field) => field.error)
-              )
-            )
-              labelProps.error = true;
-
             return (
-              <Step key={index} completed={step.complete}>
-                <StepButton
-                  optional={labelProps.optional}
-                  onClick={() => setStep(index)}
-                >
-                  <StepLabel {...labelProps}>{step.title}</StepLabel>
-                </StepButton>
-              </Step>
-            );
-          })}
-        </Stepper>
+              <>
+                {step.internalID && (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      justifyContent: "flex-start",
+                      gap: "40px",
 
-        {/* ---------------------------------------------------------------- */}
-
-        <Box
-          sx={{
-            width: "100%",
-            height: "100%",
-
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            justifyContent: "flex-start",
-            gap: "40px",
-
-            px: "0px",
-            mt: "30px",
-          }}
-        >
-          {/* eslint-disable-next-line array-callback-return */}
-          {steps[step].categories?.map((category, cIndex) => {
-            return (
-              <Box
-                key={cIndex}
-                sx={{
-                  width: "800px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  justifyContent: "flex-start",
-                  gap: "20px",
-                }}
-              >
-                {category.seperate && (
-                  <>
-                    <Typography
+                      mt: "30px",
+                    }}
+                  >
+                    <Box
+                      id={`step-${index}`}
                       sx={{
-                        fontSize: "1.5rem",
-                        fontWeight: "bold",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "flex-start",
+
+                        width: "100%",
+                        scrollMarginTop: "50px",
                       }}
                     >
-                      {category.title}
-                    </Typography>
-
-                    <Divider sx={{ width: "100%", mb: "15px" }} />
-                  </>
+                      <Typography
+                        sx={{
+                          fontSize: "2.5rem",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {step.title}
+                      </Typography>
+                      <Divider sx={{ width: "100%" }} />
+                    </Box>
+                    <WizardInternalStep
+                      type={step.internalID as Types.WizardInternalAvailSteps}
+                      env={env}
+                      stepsIndex={index}
+                      stepsHook={[steps, setSteps]}
+                    />
+                  </Box>
                 )}
+                {!step.internalID && (
+                  <Box
+                    sx={{
+                      width: "100%",
 
-                {/* eslint-disable-next-line array-callback-return */}
-                {category.fields.map((field, fIndex) => {
-                  switch (field.type) {
-                    case "switch":
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      justifyContent: "flex-start",
+                      gap: "40px",
+
+                      mt: "30px",
+                    }}
+                  >
+                    <Box
+                      id={`step-${index}`}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "flex-start",
+
+                        width: "100%",
+                        scrollMarginTop: "50px",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "2.5rem",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {step.title}
+                      </Typography>
+                      <Divider sx={{ width: "100%" }} />
+                    </Box>
+                    {step.categories?.map((category, cIndex) => {
                       return (
                         <Box
-                          key={fIndex}
+                          key={cIndex}
                           sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
                             width: "800px",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            justifyContent: "flex-start",
+                            gap: "20px",
 
-                            backgroundColor: "#ffffff11",
-                            padding: "10px",
-                            borderRadius: "10px",
+                            pl: "20px",
                           }}
                         >
-                          <Switch
-                            value={field.value}
-                            checked={field.value}
-                            size="medium"
-                            onChange={(_, v) => {
-                              field.value = v;
-                              setSteps([...steps]);
-                            }}
-                          />
-                          <Typography
-                            sx={{
-                              fontSize: "1rem",
-                            }}
-                          >
-                            {field.label}{" "}
-                          </Typography>
-                          {field.description && (
-                            <TooltipQuestion
-                              title={field.description}
-                              sx={{
-                                ml: "auto",
-                              }}
-                            />
+                          {category.seperate && (
+                            <>
+                              <Divider
+                                sx={{ width: "100%", mb: "15px" }}
+                                textAlign="left"
+                              >
+                                <Typography
+                                  sx={{
+                                    fontSize: "1.1rem",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {category.title}
+                                </Typography>
+                              </Divider>
+                            </>
                           )}
+
+                          {category.fields.map((field, fIndex) => {
+                            return (
+                              <WizardField
+                                key={fIndex}
+                                field={field}
+                                fIndex={fIndex}
+                                stepsHook={[steps, setSteps]}
+                              />
+                            );
+                          })}
                         </Box>
                       );
-                    case "slider":
-                      if (field.dataType === "percentage")
-                        return (
-                          <Box
-                            key={fIndex}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "flex-start",
-                              gap: "20px",
-                              width: "800px",
-
-                              backgroundColor: "#ffffff11",
-                              padding: "10px",
-                              borderRadius: "10px",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: "1.2rem",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {field.label}
-                            </Typography>
-                            <Slider
-                              key={fIndex}
-                              sx={{ width: "100%" }}
-                              value={field.value}
-                              min={field.min}
-                              max={field.max}
-                              step={1}
-                              onChange={(_, v) => {
-                                field.value = v;
-                                setSteps([...steps]);
-                              }}
-                            />
-                            <Chip
-                              label={`${field.value}%`}
-                              sx={{
-                                width: "90px",
-                                minWidth: "90px",
-                              }}
-                            />
-                          </Box>
-                        );
-                      if (field.dataType === "bytes")
-                        return (
-                          <Box
-                            key={fIndex}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "flex-start",
-                              gap: "20px",
-                              width: "800px",
-
-                              backgroundColor: "#ffffff11",
-                              padding: "10px",
-                              borderRadius: "10px",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: "1.2rem",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {field.label}
-                            </Typography>
-                            <Slider
-                              key={fIndex}
-                              sx={{ width: "100%" }}
-                              value={field.value}
-                              min={field.min}
-                              max={field.max}
-                              step={1}
-                              scale={(x) => 2 ** x}
-                              onChange={(_, v) => {
-                                field.value = v;
-                                setSteps([...steps]);
-                              }}
-                            />
-                            <Chip
-                              label={`${convertBytes(2 ** field.value)}`}
-                              sx={{
-                                width: "90px",
-                                minWidth: "90px",
-                              }}
-                            />
-                          </Box>
-                        );
-                      break;
-
-                    default:
-                      return (
-                        <TextField
-                          key={fIndex}
-                          type={field.type}
-                          sx={{ width: "800px" }}
-                          label={`${field.label}`}
-                          variant="outlined"
-                          value={field.value}
-                          onChange={(e) => {
-                            let error = false;
-                            if (field.type === "string") {
-                              if (
-                                field.max &&
-                                e.target.value.length > field.max
-                              )
-                                return (error = true);
-                              if (
-                                field.type === "string" &&
-                                field.min &&
-                                e.target.value.length < field.min
-                              ) {
-                                field.error = `Must be at least ${field.min} characters`;
-                                error = true;
-                              }
-                            } else if (field.type === "number") {
-                              if (
-                                e.target.value.length > 0 &&
-                                isNaN(Number(e.target.value))
-                              )
-                                return (error = true);
-                              if (
-                                field.max &&
-                                Number(e.target.value) > field.max
-                              )
-                                return (error = true);
-                              if (
-                                field.type === "number" &&
-                                field.min &&
-                                Number(e.target.value) < field.min
-                              )
-                                return (error = true);
-                            }
-
-                            if (!error) field.error = undefined;
-                            field.value = e.target.value;
-
-                            setSteps([...steps]);
-                          }}
-                          error={field.error !== undefined}
-                          helperText={field.error}
-                        />
-                      );
-                  }
-                })}
-              </Box>
+                    })}
+                  </Box>
+                )}
+              </>
             );
           })}
         </Box>
@@ -522,40 +450,96 @@ function AppsWizard() {
 
         <Box
           sx={{
-            width: "100%",
+            position: "relative",
+            right: "30px",
+            width: "15vw",
+            height: `calc(${steps.length + 1} * 80px - 52px)`,
 
-            mt: "auto",
+            userSelect: "none",
+            cursor: "pointer",
+
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: "column",
+            gap: "15px",
+
+            padding: "20px",
+            mt: "30px",
+            ml: "30px",
+
+            backgroundColor: "#ffffff11",
+
+            transition: "all 0.2s ease-in-out",
+            ...(followViewport && {
+              position: "fixed",
+              top: "60px",
+            }),
           }}
         >
+          {steps.map((step, index) => {
+            return (
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "20px",
+
+                  backgroundColor: "#ffffff11",
+                  padding: "10px",
+                  pl: "15px",
+
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    pl: "25px",
+                  },
+                }}
+                onClick={() => {
+                  const element = document.getElementById(`step-${index}`);
+                  if (!element) return;
+
+                  element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                    inline: "start",
+                  });
+                }}
+              >
+                <Typography>{step.title}</Typography>
+
+                {step.categories.some((category) => {
+                  return category.fields.some((field) => {
+                    if(field.dependsOn) {
+                      let dep: Types.WizardField | undefined;
+
+                      for (const s of steps) {
+                        if(dep) break;
+                        for (const c of s.categories) {
+                          if(dep) break;
+                          const f = c.fields.find((f) => f.id === field.dependsOn);
+                          if (f) dep = f;
+                        }
+                      }
+                      if (!dep) return false;
+                      if (field.dependsOnValues && !field.dependsOnValues.includes(dep.value)) return false;
+                    }
+                    return field.error;
+                  });
+                }) && <Warning color="error" />}
+              </Box>
+            );
+          })}
+
           <Button
+            disabled={!completed}
             variant="contained"
-            disabled={step === 0}
-            onClick={() => {
-              checkStep(step);
-              setStep((step) => step - 1)
+            sx={{
+              width: "100%",
+              mt: "auto",
             }}
           >
-            Back
-          </Button>
-          <Button
-            variant="contained"
-            disabled={
-              step === steps.length - 1 && !steps.every((e) => e.complete)
-            }
-            onClick={() => {
-              if (step < steps.length - 1) {
-                checkStep(step);
-                setStep((step) => step + 1);
-              }
-              else {
-              }
-            }}
-          >
-            {step < steps.length - 1 ? "Next" : "Finish"}
+            Submit
           </Button>
         </Box>
       </Box>
